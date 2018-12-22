@@ -22,4 +22,7 @@
             directory (usually "my documents\Diablo III") to save settings and the
             item link information.
 
+            If you select the option "Download item graphics" a directory "ItemPics"
+            will be created in your Diablo III settings directory as well.
+
     -------------------------------------------------------------------------

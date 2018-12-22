@@ -7,14 +7,16 @@ uses
   Dialogs, ExtCtrls, StdCtrls, IdBaseComponent, IdComponent, IdTCPConnection,
   IdTCPClient, IdHTTP, StrUtils, ComCtrls, IdSSLOpenSSL, shlobj, ActiveX,
   ContNrs, VirtualTrees, Menus, Clipbrd, ShellApi, Buttons, ImgList,
-  IniFiles ;
+  IniFiles, IdAuthentication, System.ImageList, System.Net.URLClient,
+  System.Net.HttpClient, System.Net.HttpClientComponent, PNGImage ;
 
 type
     TLegItem = class
         Name: String;
         Link: String;
         oldLink: String;
-        constructor create(aName, aLink: String);
+        category: String;
+        constructor create(aName, aLink, aCategory: String);
     end;
 
     TTreeData = record
@@ -24,7 +26,6 @@ type
 
 
   TMainForm = class(TForm)
-    IdHTTP1: TIdHTTP;
     LegPopup: TPopupMenu;
     CopyURLtoclipboard1: TMenuItem;
     Search1: TMenuItem;
@@ -48,6 +49,9 @@ type
     N1: TMenuItem;
     Savelinks1: TMenuItem;
     SaveDialog1: TSaveDialog;
+    cbGetPics: TCheckBox;
+    grpBoxItem: TGroupBox;
+    Image1: TImage;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -74,6 +78,7 @@ type
     procedure Savelinks1Click(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormShow(Sender: TObject);
+    procedure lblNameClick(Sender: TObject);
   private
     { Private-Deklarationen }
 
@@ -83,8 +88,8 @@ type
     BASE_URL: AnsiString;//  'https://eu.battle.net/d3/de/item/';
     BASE_URL_Items: AnsiString;// = 'https://eu.battle.net/';
 
-    procedure parsePageForPictures(aSourceCode: String; destURLs, destNames: TStrings);
-    procedure parsePageForItemLinks(aSourceCode: String; categorie: String);
+    //procedure parsePageForPictures(aSourceCode: String; destURLs, destNames: TStrings);
+    procedure parsePageForItemLinks(aSourceCode: String; categorie: String; doDownloadPics: Boolean);
 
     function GuessOldLink(aNewLink: String): String;
 
@@ -94,6 +99,8 @@ type
     procedure LoadItemsFromFile(aFilename: String);
     procedure SaveItemsToFile(aFilename: String);
 
+    procedure SavePicToFile(aURL, aFilename: String);
+
   public
     { Public-Deklarationen }
   end;
@@ -102,10 +109,18 @@ var
   MainForm: TMainForm;
   SlotList: TStringList;
   LegItems: TObjectList;
+
+  DiabloPath: String;
+
 const
 
+  PICDIR = 'ItemPics';
 
-  LEG_MARKER = 'd3-icon-item-orange';
+  //LEG_MARKER = 'd3-icon-item-orange';
+  //LEG_MARKER = 'class="column-item"';
+  LEG_MARKER = ' legendary"';
+
+
   LEG_IMAGE_START = 'background-image: url(';
   LEG_IMAGE_END = ');';
 
@@ -115,6 +130,8 @@ const
   TITLE_BEGIN = '<title>';
   TITLE_END = '</title>';
 
+
+  GEM_MARKER = 'class="data-cell"';
   GEM_NAME_START = 'data-raw="';
   GEM_NAME_END = '">';
 
@@ -122,7 +139,8 @@ const
   LEG_NAME_START = 'class="d3-color-orange">';
   LEG_NAME_END = '</a>';
 
-  SET_MARKER = 'd3-icon-item-green';
+  //SET_MARKER = 'd3-icon-item-green';
+  SET_MARKER = ' set"';
   SET_NAME_START = 'class="d3-color-green">';
 
   CSIDL_PERSONAL = $0005;
@@ -169,10 +187,11 @@ end;
 
 
 
-constructor TLegItem.create(aName, aLink: String);
+constructor TLegItem.create(aName, aLink, aCategory: String);
 begin
     self.Name := aName;
     self.Link := aLink;
+    self.category := aCategory;
 end;
 
 function AddVSTLegItem(AVST: TCustomVirtualStringTree; aNode: PVirtualNode; aLegItem: TLegItem): PVirtualNode;
@@ -261,7 +280,19 @@ begin
     SlotList.Add('amulet');
     SlotList.Add('ring');
 
-    idhttp1.IOHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
+    DiabloPath := GetShellFolder(CSIDL_PERSONAL) + '\Diablo III';
+    if NOT DirectoryExists(DiabloPath) then
+    begin
+        cbGetPics.Checked := False;
+        cbGetPics.Enabled := False;
+    end;
+
+    //idhttp1.IOHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
+    //TIdSSLIOHandlerSocketOpenSSL(idhttp1.IoHandler).SSLOptions.SSLVersions :=
+    //    [sslvSSLv2, sslvTLSv1_2];
+
+      //[sslvTLSv1,sslvTLSv1_1,sslvTLSv1_2];
+    //[sslvSSLv2, sslvSSLv23, sslvTLSv1,sslvTLSv1_1,sslvTLSv1_2];
 
     glyphs.GetBitmap(0, BtnMinimize.Glyph );
 end;
@@ -274,12 +305,10 @@ end;
 
 procedure TMainForm.FormShow(Sender: TObject);
 var ini: TIniFile;
-    savePath: String;
 begin
-    savePath := GetShellFolder(CSIDL_PERSONAL) + '\Diablo III';
-    if DirectoryExists(savePath) then
+    if DirectoryExists(DiabloPath) then
     begin
-        ini := TInifile.Create(savePath + '\GameGuideTools.ini');
+        ini := TInifile.Create(DiabloPath + '\GameGuideTools.ini');
         try
             cbRegion.ItemIndex := ini.ReadInteger('Settings', 'Region', 0);
             cbRegionChange(Nil);
@@ -297,19 +326,17 @@ begin
         finally
             ini.Free;
         end;
-        if FileExists(savePath + '\GameGuideTool.items') then
-            LoadItemsFromFile(savePath + '\GameGuideTool.items');
+        if FileExists(DiabloPath + '\GameGuideTool.items') then
+            LoadItemsFromFile(DiabloPath + '\GameGuideTool.items');
     end;
 end;
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 var ini: TIniFile;
-    savePath: String;
 begin
-    savePath := GetShellFolder(CSIDL_PERSONAL) + '\Diablo III';
-    if DirectoryExists(savePath) then
+    if DirectoryExists(DiabloPath) then
     begin
-        ini := TInifile.Create(savePath + '\GameGuideTools.ini');
+        ini := TInifile.Create(DiabloPath + '\GameGuideTools.ini');
         try
             ini.WriteInteger('Settings', 'Region', cbRegion.ItemIndex);
             ini.WriteInteger('Settings', 'Language', cbLanguage.ItemIndex);
@@ -319,7 +346,27 @@ begin
         finally
             ini.Free;
         end;
-        SaveItemsToFile(savePath + '\GameGuideTool.items');
+        SaveItemsToFile(DiabloPath + '\GameGuideTool.items');
+    end;
+end;
+
+
+procedure TMainForm.SavePicToFile(aURL, aFilename: String);
+var HttpClient: THttpClient;
+    ms: TMemoryStream;
+begin
+    HttpClient := THttpClient.Create;
+    try
+        ms := TMemoryStream.Create;
+        try
+            HttpClient.Get(aURL, ms);
+            ms.Position := 0;
+            ms.SaveToFile(aFilename);
+        finally
+            ms.Free
+        end;
+    finally
+        HttpClient.Free;
     end;
 end;
 
@@ -337,12 +384,12 @@ begin
         sl := TStringList.Create;
         try
             sl.LoadFromFile(aFilename);
-            if sl.Count > 3 then
+            if sl.Count > 4 then
             begin
-                for i := 0 to (sl.Count-1) Div 3 do
+                for i := 0 to (sl.Count-1) Div 4 do
                 begin
-                    newItem := TLegItem.create(sl[3*i], sl[3*i+1]);
-                    newItem.oldLink := sl[3*i+2];
+                    newItem := TLegItem.create(sl[4*i], sl[4*i+2], sl[4*i + 1]);
+                    newItem.oldLink := sl[4*i+3];
                     LegItems.Add(newItem);
                     AddVSTLegItem(LegVST, Nil, newItem);
                 end;
@@ -362,6 +409,7 @@ begin
         for i := 0 to LegItems.Count - 1 do
         begin
             sl.Add(tLegitem(LegItems[i]).Name);
+            sl.Add(tLegitem(LegItems[i]).category);
             sl.Add(tLegitem(LegItems[i]).Link);
             sl.Add(tLegitem(LegItems[i]).oldLink);
         end;
@@ -378,16 +426,42 @@ begin
 end;
 
 
+
+
 procedure TMainForm.LegVSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
 var Data: PTreeData;
+    currentItem: TLegitem;
+    picFilename: String;
 begin
     if cbAutoCopy.Checked and assigned(Node) then
     begin
         Data := Sender.GetNodeData(Node);
-        ClipBoard.AsText := BASE_URL_Items + Data^.fLegItem.Link;
-        lblClipboard.Caption := 'Clipboard: ' + ClipBoard.AsText;
+
+        currentItem := Data^.fLegItem;
+
+        grpBoxItem.Caption  := currentItem.Name;
+
+        //lblName.Caption := currentItem.Name;
+        //lblURL.Caption := currentItem.Link;
+        //lblOldURL.Caption := currentItem.oldLink;
+
+        picFilename := DiabloPath + '\' + PICDIR + '\' + currentItem.category + '\' + currentItem.Name + '.png';
+        if FileExists(picFilename) then
+            image1.Picture.LoadFromFile(picFilename)
+        else
+            image1.Picture.Assign(Nil);
+
+        try
+            ClipBoard.AsText := BASE_URL_Items + currentItem.Link;
+            lblClipboard.Caption := 'Clipboard: ' + BASE_URL_Items + currentItem.Link;
+        except
+            //silent
+        end;
     end else
+    begin
         lblClipboard.Caption := '';
+        image1.Picture.Assign(Nil);
+    end;
 end;
 
 procedure TMainForm.LegVSTFocusChanged(Sender: TBaseVirtualTree;
@@ -545,7 +619,11 @@ begin
     if assigned(aNode) then
     begin
         Data := LegVST.GetNodeData(aNode);
-        Clipboard.AsText := BASE_URL_Items + Data^.fLegItem.Link;
+        try
+            Clipboard.AsText := BASE_URL_Items + Data^.fLegItem.Link;
+        except
+            // silent
+        end;
     end;
 end;
 
@@ -562,7 +640,7 @@ begin
         glyphs.GetBitmap(1, BtnMinimize.Glyph );
     end else
     begin
-        PnlConfig.Height := 81;
+        PnlConfig.Height := 95;
         grpBoxSettings.Enabled := True;
         //Progressbar1.Visible := True;
         BtnMinimize.Tag := 0;
@@ -574,10 +652,12 @@ end;
 procedure TMainForm.BtGetItemLinksClick(Sender: TObject);
 var s: String;
   i: Integer;
-  utf8: UTF8String;
+  utf8: utf8String;
   ms: TMemoryStream;
   mostRecentScan: String;
   newTitleStart, newTitleEnd : Integer;
+
+  HttpClient: THttpClient;
 begin
     if LegItems.Count > 0 then
     begin
@@ -593,37 +673,50 @@ begin
     LegItems.Clear;
 
     mostRecentScan := '';
-    IdHTTP1.Request.ContentType := 'charset=utf-8';
-    ms := TMemoryStream.Create;
+    //IdHTTP1.Request.ContentType := 'charset=utf-8';
+
+    HttpClient := THttpClient.Create;
     try
-        //for i := 0 to 4 do
-        for i := 0 to SlotList.Count - 1 do
-        begin
+        ms := TMemoryStream.Create;
+        try
+            //for i := 0 to 4 do
+            for i := 0 to SlotList.Count - 1 do
+            begin
 
-            Caption := BASE_URL + SlotList[i] + '/';
+                Caption := BASE_URL + SlotList[i] + '/';
 
-            lblProgress.Caption := Format('Scanning %d/%d ... %s', [i+1, SlotList.Count, mostRecentScan]);
+                lblProgress.Caption := Format('Scanning %d/%d ... %s', [i+1, SlotList.Count, mostRecentScan]);
 
-            //'Scanning ' +  + ' ... ' + mostRecentScan;
-            Application.ProcessMessages;
+                //'Scanning ' +  + ' ... ' + mostRecentScan;
+                Application.ProcessMessages;
 
-            ms.Clear;
-            idhttp1.Get(BASE_URL + SlotList[i] + '/', ms);
+                ms.Clear;
 
-            utf8 := '';
-            Setlength(utf8, ms.Position);
-            ms.Position := 0;
-            ms.Read(PAnsiChar(utf8)^, ms.Size);
-            s := UTF8ToString(utf8);
-            // get the current title of the Page
-            newTitleStart := PosEx(TITLE_BEGIN, s, 1) + length(TITLE_BEGIN);
-            newTitleEnd := PosEx(TITLE_END, s, newTitleStart); // + length(TITLE_END);
-            mostRecentScan := Copy(s, newTitleStart, newTitleEnd - newTitleStart);
-            parsePageForItemLinks(s, SlotList[i]);
-            Application.ProcessMessages;
+                HttpClient.Get(BASE_URL + SlotList[i] + '/', ms);
+
+                utf8 := '';
+                Setlength(utf8, ms.size);
+                ms.Position := 0;
+
+                ms.ReadBuffer(PAnsiChar(utf8)^, ms.Size);
+
+                s := UTF8ToString(utf8);
+                // get the current title of the Page
+                newTitleStart := PosEx(TITLE_BEGIN, s, 1) + length(TITLE_BEGIN);
+                newTitleEnd := PosEx(TITLE_END, s, newTitleStart); // + length(TITLE_END);
+                mostRecentScan := Copy(s, newTitleStart, newTitleEnd - newTitleStart);
+
+                //ms.Position := 0;
+                //ms.SaveToFile('F:\Eigene Dateien (Daniel)\Diablo III\pic-downloads\' + mostRecentScan);
+
+                parsePageForItemLinks(s, SlotList[i], cbGetPics.Checked);
+                Application.ProcessMessages;
+            end;
+        finally
+            ms.Free;
         end;
     finally
-        ms.Free;
+        HttpClient.Free;
     end;
 
     if assigned(LegVST.GetFirst(False)) then
@@ -670,22 +763,46 @@ begin
     FGuide.Show;
 end;
 
-procedure TMainForm.parsePageForItemLinks(aSourceCode: String; categorie: String);
+procedure TMainForm.parsePageForItemLinks(aSourceCode: String; categorie: String; doDownloadPics: Boolean);
 var newURLStart, newURLend, newNameStart, newNameEnd: Integer;
+    picURLStart, picURLEnd: Integer;
     tmpPos1: Integer;
+    tmpLeg, tmpSet: Integer;
     offset: Integer;
     newFound: Boolean;
-    newName, newURL: String;
+    newName, newURL, currentDir, picURL: String;
     newItem: TLegItem;
 begin
     offset := 1;
     newFound := True;
 
+    //ShowMessage(aSourceCode);
+
+    if doDownloadPics and DirectoryExists(DiabloPath) then
+    begin
+        currentDir := DiabloPath + '\' + PICDIR + '\' + categorie;
+        // cancel Pic download if subdir can't be created
+        doDownloadPics := ForceDirectories(currentDir);
+    end;
+    {
+    DiabloPath := GetShellFolder(CSIDL_PERSONAL) + '\Diablo III';
+    if NOT DirectoryExists(DiabloPath) then
+    begin
+        cbGetPics.Checked := False;
+        cbGetPics.Enabled := False;
+    end;
+    }
+
     if categorie = 'gem' then
     begin
         // Gems are special
         repeat
-            tmpPos1 := PosEx(LEG_MARKER ,aSourceCode, offset);
+            tmpPos1 := PosEx(GEM_MARKER ,aSourceCode, offset);
+
+            {
+          GEM_NAME_START = 'data-raw="';
+          GEM_NAME_END = '">';
+            }
             if tmpPos1 > 1 then
             begin
 
@@ -699,12 +816,28 @@ begin
                 newURLStart := PosEx(LEG_ITEM_LINK_BEGIN, aSourceCode, newNameEnd) + length(LEG_ITEM_LINK_BEGIN);
                 newURLend := PosEx(LEG_ITEM_LINK_END, aSourceCode, newURLStart);
                 newURL := Copy(aSourceCode, newURLStart, newURLend - newURLStart);
-                newItem := TLegItem.create(newName, newURL);
-                newItem.oldLink := GuessOldLink(newItem.Link);
-                LegItems.Add(newItem);
-                AddVSTLegItem(LegVST, Nil, newItem);
 
-                offset := tmpPos1 + 50;
+
+                // cancel when the regular gems begins
+                if pos('recipe', newURL) > 0 then
+                begin
+                    newFound := False;
+                    // the first regular gem (without a recipe) has already been added. delete it now.
+                    LegItems.Delete(LegItems.Count-1);
+                    LegVST.DeleteNode(LegVST.GetLast(Nil));
+                end else
+                begin
+                    picURLStart := PosEx(LEG_IMAGE_START, aSourceCode, tmpPos1) + length(LEG_IMAGE_START);
+                    picURLEnd := PosEx(LEG_IMAGE_END, aSourceCode, picURLStart);
+                    picURL := Copy(aSourceCode, picURLStart, picURLEnd - picURLStart);
+                    SavePicToFile(picURL, currentDir + '\' + newName + '.png');
+
+                    newItem := TLegItem.create(newName, newURL, categorie);
+                    newItem.oldLink := GuessOldLink(newItem.Link);
+                    LegItems.Add(newItem);
+                    AddVSTLegItem(LegVST, Nil, newItem);
+                    offset := tmpPos1 + 50;
+                end;
             end else
             begin
                 newFound := False;
@@ -717,6 +850,28 @@ begin
     begin
         repeat
             tmpPos1 := PosEx(LEG_MARKER ,aSourceCode, offset);
+            {
+             LEG_MARKER = ' legendary"';
+
+              LEG_IMAGE_START = 'background-image: url(';
+              LEG_IMAGE_END = ');';
+
+              LEG_ITEM_LINK_BEGIN = '<a href="/';  // base-URL ends with "/", so we dont need the first "/" here
+              LEG_ITEM_LINK_END = '"';
+
+              TITLE_BEGIN = '<title>';
+              TITLE_END = '</title>';
+
+              GEM_NAME_START = 'data-raw="';
+              GEM_NAME_END = '">';
+
+              LEG_NAME_START = 'class="d3-color-orange">';
+              LEG_NAME_END = '</a>';
+
+              SET_MARKER = 'd3-icon-item-green';
+              SET_NAME_START = 'class="d3-color-green">';
+
+            }
             if tmpPos1 > 1 then
             begin
                newURLStart := PosEx(LEG_ITEM_LINK_BEGIN, aSourceCode, tmpPos1) + length(LEG_ITEM_LINK_BEGIN);
@@ -729,7 +884,12 @@ begin
                newName := StringReplace(newName, '{d}', '', [rfReplaceAll]);
                newName := StringReplace(newName, '&#39;', '', [rfReplaceAll]);
 
-               newItem := TLegItem.create(newName, newURL);
+               picURLStart := PosEx(LEG_IMAGE_START, aSourceCode, tmpPos1) + length(LEG_IMAGE_START);
+               picURLEnd := PosEx(LEG_IMAGE_END, aSourceCode, picURLStart);
+               picURL := Copy(aSourceCode, picURLStart, picURLEnd - picURLStart);
+               SavePicToFile(picURL, currentDir + '\' + newName + '.png');
+
+               newItem := TLegItem.create(newName, newURL, categorie);
                newItem.oldLink := GuessOldLink(newItem.Link);
                LegItems.Add(newItem);
                AddVSTLegItem(LegVST, Nil, newItem);
@@ -759,7 +919,13 @@ begin
              newName := StringReplace(newName, '{d}', '', [rfReplaceAll]);
              newName := StringReplace(newName, '&#39;', '', [rfReplaceAll]);
 
-             newItem := TLegItem.create(newName, newURL);
+             picURLStart := PosEx(LEG_IMAGE_START, aSourceCode, tmpPos1) + length(LEG_IMAGE_START);
+             picURLEnd := PosEx(LEG_IMAGE_END, aSourceCode, picURLStart);
+             picURL := Copy(aSourceCode, picURLStart, picURLEnd - picURLStart);
+             SavePicToFile(picURL, currentDir + '\' + newName + '.png');
+
+
+             newItem := TLegItem.create(newName, newURL, categorie);
              newItem.oldLink := GuessOldLink(newItem.Link);
              LegItems.Add(newItem);
              AddVSTLegItem(LegVST, Nil, newItem);
@@ -818,6 +984,12 @@ begin
 end;
 
 
+procedure TMainForm.lblNameClick(Sender: TObject);
+begin
+
+end;
+
+(*
 procedure TMainForm.parsePageForPictures(aSourceCode: String; destURLs, destNames: TStrings);
 var newURLStart, newURLend, newNameStart, newNameEnd: Integer;
     tmpPos1: Integer;
@@ -869,6 +1041,7 @@ begin
          end;
     until not newFound;
 end;
+*)
 
 procedure TMainForm.Search1Click(Sender: TObject);
 begin
@@ -907,7 +1080,10 @@ begin
     result := True;
     for i := 0 to aKeys.Count-1 do
     begin
-        if not AnsiContainsText(aLegItem.Name, aKeys[i]) then
+        if (not AnsiContainsText(aLegItem.Name, aKeys[i]))
+            AND
+            (not AnsiContainsText(aLegItem.Link, aKeys[i]))
+        then
         begin
             result := False;
             break;
@@ -943,6 +1119,12 @@ begin
     end;
 
     LegVST.FocusedNode := LegVST.GetFirst;
+
+    if not assigned(LegVST.FocusedNode) then
+    begin
+        grpBoxItem.Caption := 'Item information';
+        image1.Picture.Assign(Nil);
+    end;
 end;
 
 

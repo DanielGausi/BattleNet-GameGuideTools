@@ -2,8 +2,8 @@ object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = 'Diablo 3: Game Guide Tools'
-  ClientHeight = 209
-  ClientWidth = 602
+  ClientHeight = 346
+  ClientWidth = 688
   Color = clBtnFace
   Constraints.MinHeight = 200
   Constraints.MinWidth = 600
@@ -22,12 +22,15 @@ object MainForm: TMainForm
   TextHeight = 13
   object grpBox_Main: TGroupBox
     Left = 0
-    Top = 81
-    Width = 602
-    Height = 128
+    Top = 95
+    Width = 688
+    Height = 251
     Align = alClient
     Caption = 'Legendary Items'
     TabOrder = 0
+    DesignSize = (
+      688
+      251)
     object lblClipboard: TLabel
       Left = 222
       Top = 23
@@ -45,18 +48,12 @@ object MainForm: TMainForm
       OnChange = editSearchChange
     end
     object LegVST: TVirtualStringTree
-      Left = 2
-      Top = 50
-      Width = 598
-      Height = 76
-      Align = alBottom
+      Left = 0
+      Top = 47
+      Width = 465
+      Height = 199
       Anchors = [akLeft, akTop, akRight, akBottom]
       Header.AutoSizeIndex = 0
-      Header.Font.Charset = DEFAULT_CHARSET
-      Header.Font.Color = clWindowText
-      Header.Font.Height = -11
-      Header.Font.Name = 'Tahoma'
-      Header.Font.Style = []
       Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
       PopupMenu = LegPopup
       TabOrder = 1
@@ -75,7 +72,7 @@ object MainForm: TMainForm
         end
         item
           Position = 1
-          Width = 300
+          Width = 198
           WideText = 'URL'
         end
         item
@@ -84,33 +81,54 @@ object MainForm: TMainForm
           WideText = 'Old URL (guessed)'
         end>
     end
+    object grpBoxItem: TGroupBox
+      Left = 471
+      Top = 47
+      Width = 214
+      Height = 194
+      Anchors = [akTop, akRight]
+      Caption = 'Item information'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = [fsBold]
+      ParentFont = False
+      TabOrder = 2
+      object Image1: TImage
+        Left = 13
+        Top = 18
+        Width = 188
+        Height = 146
+      end
+    end
   end
   object PnlConfig: TPanel
     Left = 0
     Top = 0
-    Width = 602
-    Height = 81
+    Width = 688
+    Height = 95
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
     DesignSize = (
-      602
-      81)
+      688
+      95)
     object grpBoxSettings: TGroupBox
       Left = 0
       Top = 0
-      Width = 567
-      Height = 81
+      Width = 653
+      Height = 95
       Align = alLeft
       Anchors = [akLeft, akTop, akRight, akBottom]
       Caption = 'Configuration'
       TabOrder = 0
       DesignSize = (
-        567
-        81)
+        653
+        95)
       object lblProgress: TLabel
-        Left = 312
-        Top = 55
+        Left = 16
+        Top = 73
         Width = 120
         Height = 13
         Caption = '____________________'
@@ -121,7 +139,6 @@ object MainForm: TMainForm
         Width = 145
         Height = 21
         Style = csDropDownList
-        ItemHeight = 13
         ItemIndex = 0
         TabOrder = 0
         Text = 'Europe'
@@ -137,7 +154,6 @@ object MainForm: TMainForm
         Top = 24
         Width = 113
         Height = 21
-        ItemHeight = 13
         ItemIndex = 0
         TabOrder = 1
         Text = 'Deutsch'
@@ -152,9 +168,9 @@ object MainForm: TMainForm
           #1056#1091#1089#1089#1082#1080#1081)
       end
       object BtGetItemLinks: TButton
-        Left = 312
-        Top = 24
-        Width = 129
+        Left = 303
+        Top = 22
+        Width = 138
         Height = 25
         Caption = 'Get item links'
         TabOrder = 2
@@ -183,8 +199,8 @@ object MainForm: TMainForm
         OnClick = cbStayOnTopClick
       end
       object BtnGenerateJS: TButton
-        Left = 463
-        Top = 24
+        Left = 549
+        Top = 22
         Width = 93
         Height = 25
         Anchors = [akTop, akRight]
@@ -193,7 +209,7 @@ object MainForm: TMainForm
         OnClick = BtnGenerateJSClick
       end
       object BtnGuides: TButton
-        Left = 463
+        Left = 549
         Top = 50
         Width = 93
         Height = 25
@@ -202,39 +218,30 @@ object MainForm: TMainForm
         TabOrder = 6
         OnClick = BtnGuidesClick
       end
+      object cbGetPics: TCheckBox
+        Left = 303
+        Top = 50
+        Width = 129
+        Height = 17
+        Caption = 'Download item graphics'
+        TabOrder = 7
+      end
     end
     object BtnMinimize: TBitBtn
-      Left = 573
+      Left = 659
       Top = 4
       Width = 24
       Height = 15
       Hint = 'Show/Hide configuration'
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Layout = blGlyphTop
       Margin = 0
-      ParentDoubleBuffered = False
       ParentShowHint = False
       ShowHint = True
       Spacing = 0
       TabOrder = 1
       OnClick = BtnMinimizeClick
     end
-  end
-  object IdHTTP1: TIdHTTP
-    AllowCookies = True
-    ProxyParams.BasicAuthentication = False
-    ProxyParams.ProxyPort = 0
-    Request.ContentLength = -1
-    Request.ContentRangeEnd = -1
-    Request.ContentRangeStart = -1
-    Request.ContentRangeInstanceLength = -1
-    Request.Accept = 'text/html, */*'
-    Request.BasicAuthentication = False
-    Request.UserAgent = 'Mozilla/3.0 (compatible; Indy Library)'
-    HTTPOptions = [hoForceEncodeParams]
-    Left = 88
-    Top = 168
   end
   object LegPopup: TPopupMenu
     Left = 24
@@ -268,7 +275,7 @@ object MainForm: TMainForm
     Left = 152
     Top = 160
     Bitmap = {
-      494C01010200080040000D000800FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010200080054000D000800FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000340000000800000001002000000000008006
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
