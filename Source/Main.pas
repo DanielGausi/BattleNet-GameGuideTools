@@ -677,27 +677,22 @@ begin
 
     HttpClient := THttpClient.Create;
     try
+        HttpClient.SecureProtocols := [THTTPSecureProtocol.TLS12, THTTPSecureProtocol.TLS11];
         ms := TMemoryStream.Create;
         try
-            //for i := 0 to 4 do
             for i := 0 to SlotList.Count - 1 do
             begin
-
-                Caption := BASE_URL + SlotList[i] + '/';
-
                 lblProgress.Caption := Format('Scanning %d/%d ... %s', [i+1, SlotList.Count, mostRecentScan]);
 
-                //'Scanning ' +  + ' ... ' + mostRecentScan;
                 Application.ProcessMessages;
 
-                ms.Clear;
 
+                ms.Clear;
                 HttpClient.Get(BASE_URL + SlotList[i] + '/', ms);
 
                 utf8 := '';
                 Setlength(utf8, ms.size);
                 ms.Position := 0;
-
                 ms.ReadBuffer(PAnsiChar(utf8)^, ms.Size);
 
                 s := UTF8ToString(utf8);
@@ -705,9 +700,6 @@ begin
                 newTitleStart := PosEx(TITLE_BEGIN, s, 1) + length(TITLE_BEGIN);
                 newTitleEnd := PosEx(TITLE_END, s, newTitleStart); // + length(TITLE_END);
                 mostRecentScan := Copy(s, newTitleStart, newTitleEnd - newTitleStart);
-
-                //ms.Position := 0;
-                //ms.SaveToFile('F:\Eigene Dateien (Daniel)\Diablo III\pic-downloads\' + mostRecentScan);
 
                 parsePageForItemLinks(s, SlotList[i], cbGetPics.Checked);
                 Application.ProcessMessages;
@@ -783,15 +775,11 @@ begin
         currentDir := DiabloPath + '\' + PICDIR + '\' + categorie;
         // cancel Pic download if subdir can't be created
         doDownloadPics := ForceDirectories(currentDir);
-    end;
-    {
-    DiabloPath := GetShellFolder(CSIDL_PERSONAL) + '\Diablo III';
-    if NOT DirectoryExists(DiabloPath) then
+    end else
     begin
-        cbGetPics.Checked := False;
-        cbGetPics.Enabled := False;
+        // no Diablo-Directory found ....
+        doDownloadPics := False;
     end;
-    }
 
     if categorie = 'gem' then
     begin
@@ -827,10 +815,13 @@ begin
                     LegVST.DeleteNode(LegVST.GetLast(Nil));
                 end else
                 begin
-                    picURLStart := PosEx(LEG_IMAGE_START, aSourceCode, tmpPos1) + length(LEG_IMAGE_START);
-                    picURLEnd := PosEx(LEG_IMAGE_END, aSourceCode, picURLStart);
-                    picURL := Copy(aSourceCode, picURLStart, picURLEnd - picURLStart);
-                    SavePicToFile(picURL, currentDir + '\' + newName + '.png');
+                    if doDownloadPics then
+                    begin
+                        picURLStart := PosEx(LEG_IMAGE_START, aSourceCode, tmpPos1) + length(LEG_IMAGE_START);
+                        picURLEnd := PosEx(LEG_IMAGE_END, aSourceCode, picURLStart);
+                        picURL := Copy(aSourceCode, picURLStart, picURLEnd - picURLStart);
+                        SavePicToFile(picURL, currentDir + '\' + newName + '.png');
+                    end;
 
                     newItem := TLegItem.create(newName, newURL, categorie);
                     newItem.oldLink := GuessOldLink(newItem.Link);
@@ -884,10 +875,13 @@ begin
                newName := StringReplace(newName, '{d}', '', [rfReplaceAll]);
                newName := StringReplace(newName, '&#39;', '', [rfReplaceAll]);
 
-               picURLStart := PosEx(LEG_IMAGE_START, aSourceCode, tmpPos1) + length(LEG_IMAGE_START);
-               picURLEnd := PosEx(LEG_IMAGE_END, aSourceCode, picURLStart);
-               picURL := Copy(aSourceCode, picURLStart, picURLEnd - picURLStart);
-               SavePicToFile(picURL, currentDir + '\' + newName + '.png');
+               if doDownloadPics then
+               begin
+                   picURLStart := PosEx(LEG_IMAGE_START, aSourceCode, tmpPos1) + length(LEG_IMAGE_START);
+                   picURLEnd := PosEx(LEG_IMAGE_END, aSourceCode, picURLStart);
+                   picURL := Copy(aSourceCode, picURLStart, picURLEnd - picURLStart);
+                   SavePicToFile(picURL, currentDir + '\' + newName + '.png');
+               end;
 
                newItem := TLegItem.create(newName, newURL, categorie);
                newItem.oldLink := GuessOldLink(newItem.Link);
@@ -918,12 +912,13 @@ begin
              newName := Copy(aSourceCode, newNameStart, newNameEnd - newNameStart);
              newName := StringReplace(newName, '{d}', '', [rfReplaceAll]);
              newName := StringReplace(newName, '&#39;', '', [rfReplaceAll]);
-
-             picURLStart := PosEx(LEG_IMAGE_START, aSourceCode, tmpPos1) + length(LEG_IMAGE_START);
-             picURLEnd := PosEx(LEG_IMAGE_END, aSourceCode, picURLStart);
-             picURL := Copy(aSourceCode, picURLStart, picURLEnd - picURLStart);
-             SavePicToFile(picURL, currentDir + '\' + newName + '.png');
-
+             if doDownloadPics then
+             begin
+                 picURLStart := PosEx(LEG_IMAGE_START, aSourceCode, tmpPos1) + length(LEG_IMAGE_START);
+                 picURLEnd := PosEx(LEG_IMAGE_END, aSourceCode, picURLStart);
+                 picURL := Copy(aSourceCode, picURLStart, picURLEnd - picURLStart);
+                 SavePicToFile(picURL, currentDir + '\' + newName + '.png');
+             end;
 
              newItem := TLegItem.create(newName, newURL, categorie);
              newItem.oldLink := GuessOldLink(newItem.Link);
