@@ -52,6 +52,7 @@ type
     cbGetPics: TCheckBox;
     grpBoxItem: TGroupBox;
     Image1: TImage;
+    cbUseMarkDown: TCheckBox;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -431,7 +432,7 @@ end;
 procedure TMainForm.LegVSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
 var Data: PTreeData;
     currentItem: TLegitem;
-    picFilename: String;
+    picFilename, newLink: String;
 begin
     if cbAutoCopy.Checked and assigned(Node) then
     begin
@@ -452,8 +453,14 @@ begin
             image1.Picture.Assign(Nil);
 
         try
-            ClipBoard.AsText := BASE_URL_Items + currentItem.Link;
-            lblClipboard.Caption := 'Clipboard: ' + BASE_URL_Items + currentItem.Link;
+            if cbUseMarkDown.Checked then
+                newLink := Format('[%s](%s)', [currentItem.Name, BASE_URL_Items + currentItem.Link])
+            else
+                newLink :=  BASE_URL_Items + currentItem.Link;
+
+            ClipBoard.AsText := newLink;
+            lblClipboard.Caption := newLink;
+
         except
             //silent
         end;
@@ -614,13 +621,21 @@ end;
 procedure TMainForm.CopyURLtoclipboard1Click(Sender: TObject);
 var aNode: PVirtualNode;
     Data: PTreeData;
+    newLink: String;
 begin
     aNode := LegVST.FocusedNode;
     if assigned(aNode) then
     begin
         Data := LegVST.GetNodeData(aNode);
         try
-            Clipboard.AsText := BASE_URL_Items + Data^.fLegItem.Link;
+
+            if cbUseMarkDown.Checked then
+                newLink := Format('[%s](%s)', [Data^.fLegItem.Name, BASE_URL_Items + Data^.fLegItem.Link])
+            else
+                newLink :=  BASE_URL_Items + Data^.fLegItem.Link;
+
+            ClipBoard.AsText := newLink;
+            lblClipboard.Caption := newLink;
         except
             // silent
         end;

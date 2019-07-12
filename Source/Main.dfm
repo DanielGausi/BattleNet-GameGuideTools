@@ -67,18 +67,18 @@ object MainForm: TMainForm
       Columns = <
         item
           Position = 0
+          Text = 'Name'
           Width = 183
-          WideText = 'Name'
         end
         item
           Position = 1
+          Text = 'URL'
           Width = 198
-          WideText = 'URL'
         end
         item
           Position = 2
+          Text = 'Old URL (guessed)'
           Width = 188
-          WideText = 'Old URL (guessed)'
         end>
     end
     object grpBoxItem: TGroupBox
@@ -127,7 +127,7 @@ object MainForm: TMainForm
         653
         95)
       object lblProgress: TLabel
-        Left = 16
+        Left = 184
         Top = 73
         Width = 120
         Height = 13
@@ -206,6 +206,7 @@ object MainForm: TMainForm
         Anchors = [akTop, akRight]
         Caption = 'Create JS'
         TabOrder = 5
+        Visible = False
         OnClick = BtnGenerateJSClick
       end
       object BtnGuides: TButton
@@ -216,6 +217,7 @@ object MainForm: TMainForm
         Anchors = [akTop, akRight]
         Caption = 'Rewrite guide'
         TabOrder = 6
+        Visible = False
         OnClick = BtnGuidesClick
       end
       object cbGetPics: TCheckBox
@@ -225,6 +227,16 @@ object MainForm: TMainForm
         Height = 17
         Caption = 'Download item graphics'
         TabOrder = 7
+      end
+      object cbUseMarkDown: TCheckBox
+        Left = 16
+        Top = 72
+        Width = 137
+        Height = 17
+        Caption = 'Use Markdown syntax'
+        Checked = True
+        State = cbChecked
+        TabOrder = 8
       end
     end
     object BtnMinimize: TBitBtn
@@ -275,7 +287,7 @@ object MainForm: TMainForm
     Left = 152
     Top = 160
     Bitmap = {
-      494C01010200080054000D000800FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010200080004000D000800FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000340000000800000001002000000000008006
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
