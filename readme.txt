@@ -12,6 +12,15 @@
     - Scan the game guide to collect all item links, and search for a specific link 
       by item name
 
+    - Note: This program will try to create two files in your Diablo III settings 
+            directory (usually "my documents\Diablo III") to save settings and the
+            item link information.
+
+            If you select the option "Download item graphics" a directory "ItemPics"
+            will be created in your Diablo III settings directory as well.
+
+    -------------------------------------------------------------------------
+
     The following functions are deactivated in the most current binary 
     (because of the new forums)
 
@@ -21,12 +30,5 @@
       in other players guides in your browser. 
       * I used this to create this script:
         http://dh-deluxe.de/files/downloads/D3-Item-Guide-Wizard.user.js 
-
-    - Note: This program will try to create two files in your Diablo III settings 
-            directory (usually "my documents\Diablo III") to save settings and the
-            item link information.
-
-            If you select the option "Download item graphics" a directory "ItemPics"
-            will be created in your Diablo III settings directory as well.
 
     -------------------------------------------------------------------------
