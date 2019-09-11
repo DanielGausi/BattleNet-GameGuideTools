@@ -6,7 +6,7 @@ Some tools dealing with the [Diablo 3 Game Guide](https://eu.diablo3.com/de/game
  ![Screenshot](/screenshot.jpg) 
 
 * Scan the game guide to collect all item links, and search for a specific link by item name
-* Also collect all links to skill of the Diabl 3 hero classes
+* Also collect all links to skill of the Diablo 3 hero classes
 * When searching for an item or skill, a proper URL to that item is copied into the clipboard, to be pasted into the forum editor.
 * URLs can be created as pure URL, within code tags (for users with Trust Level 0-2 in the forums) or with full Markdown syntax (for users with Trust Level 3 in the forums).
 
