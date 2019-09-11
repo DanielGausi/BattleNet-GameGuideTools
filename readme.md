@@ -2,7 +2,9 @@
 # Diablo 3: Game Guide Tools
     
 Copyright (C) 2017-2019, Daniel Gaussmann 
+
 [dh-deluxe.de](http://www.dh-deluxe.de) 
+
 hebalon@dh-deluxe.de 
  
  ![Screenshot](/screenshot.jpg)
