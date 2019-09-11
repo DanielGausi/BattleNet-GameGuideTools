@@ -1,15 +1,13 @@
 
 # Diablo 3: Game Guide Tools
     
- Copyright (C) 2017-2019, Daniel Gaussmann 
- [dh-deluxe.de](http://www.dh-deluxe.de) 
- hebalon@dh-deluxe.de 
- 
- ![Screenshot](/screenshot.jpg)
-   
 Some tools dealing with the Diablo 3 Game Guide and links to legendary items.
 
+ ![Screenshot](/screenshot.jpg) 
+
 * Scan the game guide to collect all item links, and search for a specific link by item name
+* Also collect all skill links
+* URLs can be created as pure URL, within code tags (for Users with Trust Level 0-2 in the forums) or with full Markdown syntax (for users with Trust Level 3 in the forums).
 
  Note: This program will try to create two files in your Diablo III settings directory (usually "my documents\Diablo III") to save settings and the item link information. 
  
@@ -23,3 +21,10 @@ The following functions are deactivated in the most current binary, because of t
 
 * Create some part of a JS code needed for a userscript to fix the old links in other players guides in your browser. 
 I used this to create this [Userscript](http://dh-deluxe.de/files/downloads/D3-Item-Guide-Wizard.user.js). However, this is also outdated ;-). 
+
+## Copyright note
+ Copyright (C) 2017-2019, Daniel Gaussmann   
+ [dh-deluxe.de](http://www.dh-deluxe.de)  
+ hebalon@dh-deluxe.de  
+ 
+ Battle.net, Blizzard, Diablo 3 and Reaper of Souls are Trademarks of Blizzard Entertainment, Inc.
