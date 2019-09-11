@@ -14,10 +14,11 @@ type
     TLegItem = class
         Name: String;
         Link: String;
-        oldLink: String;
-        category: String;
+        oldLink: String;  // unuesed for skills
+        category: String; // = Hero class for skills
         constructor create(aName, aLink, aCategory: String);
     end;
+
 
     TTreeData = record
       fLegItem : TLegItem;
@@ -52,7 +53,7 @@ type
     cbGetPics: TCheckBox;
     grpBoxItem: TGroupBox;
     Image1: TImage;
-    cbUseMarkDown: TCheckBox;
+    cbURLSyntax: TComboBox;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -80,25 +81,35 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormShow(Sender: TObject);
     procedure lblNameClick(Sender: TObject);
+    procedure cbURLSyntaxChange(Sender: TObject);
   private
     { Private-Deklarationen }
 
     LanguageCode: String;
     RegionCode: String;
 
-    BASE_URL: AnsiString;//  'https://eu.battle.net/d3/de/item/';
-    BASE_URL_Items: AnsiString;// = 'https://eu.battle.net/';
+    BASE_URL_BattleNet: AnsiString; //  https://eu.battle.net/
+    BASE_URL_Items: AnsiString;     //  https://eu.battle.net/d3/de/item/
+    BASE_URL_Skills: AnsiString;    //   https://eu.diablo3.com/de/class/   // + demon-hunter/active/
+
+    lastSelectedItem: TLegItem;
 
     //procedure parsePageForPictures(aSourceCode: String; destURLs, destNames: TStrings);
     procedure parsePageForItemLinks(aSourceCode: String; categorie: String; doDownloadPics: Boolean);
 
+    procedure parsePageForSkillLinks(aSourceCode: String; categorie: String; doDownloadPics: Boolean);
+
     function GuessOldLink(aNewLink: String): String;
+
+    function GenerateClipboardLink(aItem: TLegItem): String;
 
     procedure CorrectBaseLinks;
     procedure DoSearch(aKeywords: String);
 
     procedure LoadItemsFromFile(aFilename: String);
     procedure SaveItemsToFile(aFilename: String);
+
+    procedure LoadSpecialItemsFromFile(aFilename: String);
 
     procedure SavePicToFile(aURL, aFilename: String);
 
@@ -109,6 +120,7 @@ type
 var
   MainForm: TMainForm;
   SlotList: TStringList;
+  ClassList: TStringList;
   LegItems: TObjectList;
 
   DiabloPath: String;
@@ -143,6 +155,19 @@ const
   //SET_MARKER = 'd3-icon-item-green';
   SET_MARKER = ' set"';
   SET_NAME_START = 'class="d3-color-green">';
+
+
+  // skills
+  SKILL_MARKER = '<div class="skill-details">';
+  SKILL_IMAGE_START = 'background-image: url(';
+  SKILL_IMAGE_END = ');';
+
+  SKILL_URL_BEGIN = '<a href="/';
+  SKILL_URL_END   = '"';
+
+  SKILL_NAME_BEGIN = '>'; // end of the opening <a ...>
+  SKILL_NAME_END   = '<'; // start of the closing </a>
+
 
   CSIDL_PERSONAL = $0005;
 
@@ -217,12 +242,15 @@ begin
 
     LegItems := TObjectList.Create(True);
 
+    lastSelectedItem := Nil;
+
     //BASE_URL_Gems := 'https://eu.diablo3.com/de/item/gem/';
     //BASE_URL := 'https://eu.battle.net/d3/de/item/';
     //BASE_URL_Items := 'https://eu.battle.net/';
 
-    BASE_URL := 'https://eu.diablo3.com/de/item/';
-    BASE_URL_Items := 'https://eu.diablo3.com/';
+    BASE_URL_BattleNet := 'https://eu.diablo3.com/';
+    BASE_URL_Items     := 'https://eu.diablo3.com/de/item/';
+    BASE_URL_Skills    := 'https://eu.diablo3.com/de/class/';   // + e.g. demon-hunter/active/
 
     SlotList.Add('gem');
     // armor
@@ -281,6 +309,15 @@ begin
     SlotList.Add('amulet');
     SlotList.Add('ring');
 
+    ClassList := TStringList.Create;
+    ClassList.Add('barbarian');
+    ClassList.Add('demon-hunter');
+    ClassList.Add('witch-doctor');
+    ClassList.Add('crusader');
+    ClassList.Add('monk');
+    ClassList.Add('necromancer');
+    ClassList.Add('wizard');
+
     DiabloPath := GetShellFolder(CSIDL_PERSONAL) + '\Diablo III';
     if NOT DirectoryExists(DiabloPath) then
     begin
@@ -301,6 +338,7 @@ end;
 procedure TMainForm.FormDestroy(Sender: TObject);
 begin
     SlotList.Free;
+    ClassList.Free;
     LegItems.Free;
 end;
 
@@ -322,6 +360,8 @@ begin
             else
                 SetWindowPos (MainForm.Handle, HWND_NOTOPMOST, -1, -1, -1, -1, SWP_NOMOVE + SWP_NOSIZE);
 
+            cbURLSyntax.ItemIndex := ini.ReadInteger('Settings', 'URLSyntax', 1);
+
             if ini.ReadBool('Settings', 'Minimzed', False) then
                 BtnMinimize.Click;
         finally
@@ -329,6 +369,11 @@ begin
         end;
         if FileExists(DiabloPath + '\GameGuideTool.items') then
             LoadItemsFromFile(DiabloPath + '\GameGuideTool.items');
+
+        // kinda hidden feature: Additional file with emoji-Links (only for Trustlevel 3)
+        // this file has to be maintained manually
+        if FileExists(DiabloPath + '\GameGuideToolEmojis.items') then
+            LoadSpecialItemsFromFile(DiabloPath + '\GameGuideToolEmojis.items');
     end;
 end;
 
@@ -344,6 +389,7 @@ begin
             ini.WriteBool('Settings', 'StayOnTop', cbStayOnTop.Checked);
             ini.WriteBool('Settings', 'AutoCopy', cbAutoCopy.Checked);
             ini.WriteBool('Settings', 'Minimzed', BtnMinimize.Tag = 1);
+            ini.WriteInteger('Settings', 'URLSyntax', cbURLSyntax.ItemIndex);
         finally
             ini.Free;
         end;
@@ -401,6 +447,33 @@ begin
     end;
 end;
 
+// used for the Emojis
+procedure TMainForm.LoadSpecialItemsFromFile(aFilename: String);
+var sl: TStringList;
+    i: Integer;
+    newItem: TLegItem;
+begin
+    if FileExists(aFilename) then
+    begin
+        sl := TStringList.Create;
+        try
+            sl.LoadFromFile(aFilename);
+            if sl.Count > 4 then
+            begin
+                for i := 0 to (sl.Count-1) Div 4 do
+                begin
+                    newItem := TLegItem.create(sl[4*i], sl[4*i+2], sl[4*i + 1]);
+                    newItem.oldLink := sl[4*i+3];
+                    LegItems.Add(newItem);
+                    AddVSTLegItem(LegVST, Nil, newItem);
+                end;
+            end;
+        finally
+            sl.Free;
+        end;
+    end;
+end;
+
 procedure TMainForm.SaveItemsToFile(aFilename: String);
 var sl: TStringList;
     i: Integer;
@@ -409,10 +482,14 @@ begin
     try
         for i := 0 to LegItems.Count - 1 do
         begin
-            sl.Add(tLegitem(LegItems[i]).Name);
-            sl.Add(tLegitem(LegItems[i]).category);
-            sl.Add(tLegitem(LegItems[i]).Link);
-            sl.Add(tLegitem(LegItems[i]).oldLink);
+            // don't save the emoijs in the regular item file
+            if tLegitem(LegItems[i]).category <> '_Emojis' then
+            begin
+                sl.Add(tLegitem(LegItems[i]).Name);
+                sl.Add(tLegitem(LegItems[i]).category);
+                sl.Add(tLegitem(LegItems[i]).Link);
+                sl.Add(tLegitem(LegItems[i]).oldLink);
+            end;
         end;
         sl.SaveToFile(aFileName);
     finally
@@ -453,10 +530,7 @@ begin
             image1.Picture.Assign(Nil);
 
         try
-            if cbUseMarkDown.Checked then
-                newLink := Format('[%s](%s)', [currentItem.Name, BASE_URL_Items + currentItem.Link])
-            else
-                newLink :=  BASE_URL_Items + currentItem.Link;
+            newLink := GenerateClipboardLink(currentItem);
 
             ClipBoard.AsText := newLink;
             lblClipboard.Caption := newLink;
@@ -481,14 +555,17 @@ end;
 procedure TMainForm.LegVSTDblClick(Sender: TObject);
 var aNode: PVirtualNode;
     Data: PTreeData;
+    aItem: TLegItem;
 begin
     aNode := LegVST.FocusedNode;
     if assigned(aNode) then
     begin
         Data := LegVST.GetNodeData(aNode);
-        shellexecute(handle, 'open',
-        PChar(BASE_URL_Items + Data^.fLegItem.Link),
-        nil,nil,sw_show)
+        aItem := Data^.fLegItem;
+        if aItem.Category  = '_Emojis' then
+            shellexecute(handle, 'open', PChar( aItem.Link), nil,nil,sw_show)
+        else
+            shellexecute(handle, 'open', PChar(BASE_URL_BattleNet + aItem.Link), nil,nil,sw_show);
     end;
 end;
 
@@ -588,8 +665,9 @@ begin
 
     //https://eu.diablo3.com/de/item/gem/
     //BASE_URL_Gems := 'd3/' + LanguageCode + '/item/';
-    BASE_URL := 'https://' + regionCode + '.diablo3.com/' + LanguageCode + '/item/';
-    BASE_URL_Items := 'https://' + regionCode + '.diablo3.com/';
+    BASE_URL_BattleNet := 'https://' + regionCode + '.diablo3.com/';
+    BASE_URL_Items     := 'https://' + regionCode + '.diablo3.com/' + LanguageCode + '/item/';
+    BASE_URL_Skills    := 'https://' + regionCode + '.diablo3.com/' + LanguageCode + '/class/';
 end;
 
 procedure TMainForm.cbStayOnTopClick(Sender: TObject);
@@ -598,6 +676,18 @@ begin
         SetWindowPos (MainForm.Handle, HWND_TOPMOST, -1, -1, -1, -1, SWP_NOMOVE + SWP_NOSIZE)
     else
         SetWindowPos (MainForm.Handle, HWND_NOTOPMOST, -1, -1, -1, -1, SWP_NOMOVE + SWP_NOSIZE)
+end;
+
+procedure TMainForm.cbURLSyntaxChange(Sender: TObject);
+var newLink: String;
+begin
+    if assigned(lastSelectedItem) then
+    begin
+        newLink := GenerateClipboardLink(lastSelectedItem);
+        ClipBoard.AsText := newLink;
+        lblClipboard.Caption := newLink;
+
+    end;
 end;
 
 procedure TMainForm.cbAutoCopyClick(Sender: TObject);
@@ -628,12 +718,7 @@ begin
     begin
         Data := LegVST.GetNodeData(aNode);
         try
-
-            if cbUseMarkDown.Checked then
-                newLink := Format('[%s](%s)', [Data^.fLegItem.Name, BASE_URL_Items + Data^.fLegItem.Link])
-            else
-                newLink :=  BASE_URL_Items + Data^.fLegItem.Link;
-
+            newLink := GenerateClipboardLink(Data^.fLegItem);
             ClipBoard.AsText := newLink;
             lblClipboard.Caption := newLink;
         except
@@ -687,6 +772,8 @@ begin
     LegVST.Clear;
     LegItems.Clear;
 
+    lastSelectedItem := Nil;
+
     mostRecentScan := '';
     //IdHTTP1.Request.ContentType := 'charset=utf-8';
 
@@ -698,12 +785,11 @@ begin
             for i := 0 to SlotList.Count - 1 do
             begin
                 lblProgress.Caption := Format('Scanning %d/%d ... %s', [i+1, SlotList.Count, mostRecentScan]);
-
                 Application.ProcessMessages;
 
 
                 ms.Clear;
-                HttpClient.Get(BASE_URL + SlotList[i] + '/', ms);
+                HttpClient.Get(BASE_URL_Items + SlotList[i] + '/', ms);
 
                 utf8 := '';
                 Setlength(utf8, ms.size);
@@ -719,12 +805,60 @@ begin
                 parsePageForItemLinks(s, SlotList[i], cbGetPics.Checked);
                 Application.ProcessMessages;
             end;
+
+
+            // the same for skills
+            mostRecentScan := '';
+            for i := 0 to ClassList.Count - 1 do
+            begin
+                mostRecentScan := ClassList[i];
+
+                lblProgress.Caption := Format('Scanning %d/%d ... %s', [i+1, ClassList.Count, mostRecentScan]);
+                Application.ProcessMessages;
+
+                // active skills
+                ms.Clear;
+                HttpClient.Get(BASE_URL_Skills + ClassList[i] + '/active/', ms);
+                utf8 := '';
+                Setlength(utf8, ms.size);
+                ms.Position := 0;
+                ms.ReadBuffer(PAnsiChar(utf8)^, ms.Size);
+                s := UTF8ToString(utf8);
+                parsePageForSkillLinks(s, ClassList[i], cbGetPics.Checked);
+
+                // passive skills
+                ms.Clear;
+                HttpClient.Get(BASE_URL_Skills + ClassList[i] + '/passive/', ms);
+                utf8 := '';
+                Setlength(utf8, ms.size);
+                ms.Position := 0;
+                ms.ReadBuffer(PAnsiChar(utf8)^, ms.Size);
+                s := UTF8ToString(utf8);
+                parsePageForSkillLinks(s, ClassList[i], cbGetPics.Checked);
+
+                //Application.ProcessMessages;
+
+                // get the current title of the Page
+                // doesnt make sense for skill, as it doesnt include the class name
+                //newTitleStart := PosEx(TITLE_BEGIN, s, 1) + length(TITLE_BEGIN);
+                //newTitleEnd := PosEx(TITLE_END, s, newTitleStart); // + length(TITLE_END);
+                //mostRecentScan := Copy(s, newTitleStart, newTitleEnd - newTitleStart);
+
+
+            end;
+
+
         finally
             ms.Free;
         end;
     finally
         HttpClient.Free;
     end;
+
+    // load special items again
+    if FileExists(DiabloPath + '\GameGuideToolEmojis.items') then
+        LoadSpecialItemsFromFile(DiabloPath + '\GameGuideToolEmojis.items');
+
 
     if assigned(LegVST.GetFirst(False)) then
         LegVST.Selected[0] := True;
@@ -835,6 +969,8 @@ begin
                         picURLStart := PosEx(LEG_IMAGE_START, aSourceCode, tmpPos1) + length(LEG_IMAGE_START);
                         picURLEnd := PosEx(LEG_IMAGE_END, aSourceCode, picURLStart);
                         picURL := Copy(aSourceCode, picURLStart, picURLEnd - picURLStart);
+                        // to be safe
+                        picURL := StringReplace(picURL, '''', '', [rfReplaceAll]);
                         SavePicToFile(picURL, currentDir + '\' + newName + '.png');
                     end;
 
@@ -895,6 +1031,8 @@ begin
                    picURLStart := PosEx(LEG_IMAGE_START, aSourceCode, tmpPos1) + length(LEG_IMAGE_START);
                    picURLEnd := PosEx(LEG_IMAGE_END, aSourceCode, picURLStart);
                    picURL := Copy(aSourceCode, picURLStart, picURLEnd - picURLStart);
+                   // to be safe
+                   picURL := StringReplace(picURL, '''', '', [rfReplaceAll]);
                    SavePicToFile(picURL, currentDir + '\' + newName + '.png');
                end;
 
@@ -932,6 +1070,8 @@ begin
                  picURLStart := PosEx(LEG_IMAGE_START, aSourceCode, tmpPos1) + length(LEG_IMAGE_START);
                  picURLEnd := PosEx(LEG_IMAGE_END, aSourceCode, picURLStart);
                  picURL := Copy(aSourceCode, picURLStart, picURLEnd - picURLStart);
+                 // to be safe
+                 picURL := StringReplace(picURL, '''', '', [rfReplaceAll]);
                  SavePicToFile(picURL, currentDir + '\' + newName + '.png');
              end;
 
@@ -946,6 +1086,109 @@ begin
             newFound := False;
          end;
     until not newFound;
+end;
+
+procedure TMainForm.parsePageForSkillLinks(aSourceCode: String; categorie: String; doDownloadPics: Boolean);
+var newURLStart, newURLend, newNameStart, newNameEnd: Integer;
+    picURLStart, picURLEnd: Integer;
+    tmpPos1: Integer;
+    offset: Integer;
+    newFound: Boolean;
+    newName, newURL, currentDir, picURL: String;
+    newItem: TLegItem;
+begin
+    offset := 1;
+    newFound := True;
+
+    //ShowMessage(aSourceCode);
+
+    if doDownloadPics and DirectoryExists(DiabloPath) then
+    begin
+        currentDir := DiabloPath + '\' + PICDIR + '\' + categorie;
+        // cancel Pic download if subdir can't be created
+        doDownloadPics := ForceDirectories(currentDir);
+    end else
+    begin
+        // no Diablo-Directory found ....
+        doDownloadPics := False;
+    end;
+
+
+    repeat
+        tmpPos1 := PosEx(SKILL_MARKER ,aSourceCode, offset);
+        {
+          // skills
+          SKILL_MARKER = '<div class="skill-details">';
+          SKILL_IMAGE_START = 'background-image: url(';
+          SKILL_IMAGE_END = ');';
+
+          SKILL_URL_BEGIN = '<a href="';
+          SKILL_URL_END   = '"';
+
+          SKILL_NAME_BEGIN = '>'; // end of the opening <a ...>
+          SKILL_NAME_END   = '<'; // start of the closing </a>
+
+        }
+        if tmpPos1 > 1 then
+        begin
+            // first in the code is the image-URL here
+            picURLStart := PosEx(SKILL_IMAGE_START, aSourceCode, tmpPos1) + length(SKILL_IMAGE_START);
+            picURLEnd := PosEx(SKILL_IMAGE_END, aSourceCode, picURLStart);
+            picURL := Copy(aSourceCode, picURLStart, picURLEnd - picURLStart);
+            // to be safe
+            picURL := StringReplace(picURL, '''', '', [rfReplaceAll]);
+
+            // next: named Link, e.g. <a href="/de/class/demon-hunter/active/hungering-arrow" rel="np">Hungriger Pfeil</a>
+
+            newURLStart := PosEx(SKILL_URL_BEGIN, aSourceCode, picURLEnd) + length(SKILL_URL_BEGIN);
+            newURLend := PosEx(SKILL_URL_END, aSourceCode, newURLStart);
+            newURL := Copy(aSourceCode, newURLStart, newURLend - newURLStart);
+
+            newNameStart := PosEx(SKILL_NAME_BEGIN, aSourceCode, newURLend) + length(SKILL_NAME_BEGIN);
+            newNameEnd   := PosEx(SKILL_NAME_END, aSourceCode, newNameStart);
+            newName := Copy(aSourceCode, newNameStart, newNameEnd - newNameStart);
+            newName := StringReplace(newName, '{d}', '', [rfReplaceAll]);
+            newName := StringReplace(newName, '&#39;', '', [rfReplaceAll]);
+
+            if doDownloadPics then
+               SavePicToFile(picURL, currentDir + '\' + newName + '.png');
+
+            newItem := TLegItem.create(newName, newURL, categorie);
+            newItem.oldLink := newURL; // GuessOldLink(newItem.Link);
+            LegItems.Add(newItem);
+            AddVSTLegItem(LegVST, Nil, newItem);
+
+            offset := newNameEnd; // tmpPos1 + 50;
+        end else
+        begin
+          newFound := False;
+        end;
+    until not newFound;
+
+
+end;
+
+function TMainForm.GenerateClipboardLink(aItem: TLegItem): String;
+begin
+    if not assigned(aItem) then
+        exit;
+
+    lastSelectedItem := aItem;
+
+    if aItem.category = '_Emojis' then
+    begin
+        // ![valla](http://gamepedia.cursecdn.com/allstars_gamepedia/9/92/Emoji_Valla_Pack_1_Valla_Happy.png)
+        result := Format('![%s](%s)', [aItem.Name, aItem.Link]);
+    end else
+    begin
+
+        case cbURLSyntax.ItemIndex of
+            1: result := Format('`%s`', [BASE_URL_BattleNet + aItem.Link]);
+            2: result := Format('[%s](%s)', [aItem.Name, BASE_URL_BattleNet + aItem.Link]);
+        else
+            result :=  BASE_URL_BattleNet + aItem.Link;
+        end;
+    end;
 end;
 
 function TMainForm.GuessOldLink(aNewLink: String): String;
@@ -1136,6 +1379,8 @@ begin
         image1.Picture.Assign(Nil);
     end;
 end;
+
+
 
 
 end.

@@ -2,8 +2,8 @@ object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = 'Diablo 3: Game Guide Tools'
-  ClientHeight = 346
-  ClientWidth = 688
+  ClientHeight = 359
+  ClientWidth = 631
   Color = clBtnFace
   Constraints.MinHeight = 200
   Constraints.MinWidth = 600
@@ -23,25 +23,28 @@ object MainForm: TMainForm
   object grpBox_Main: TGroupBox
     Left = 0
     Top = 95
-    Width = 688
-    Height = 251
+    Width = 631
+    Height = 264
     Align = alClient
     Caption = 'Legendary Items'
     TabOrder = 0
     DesignSize = (
-      688
-      251)
+      631
+      264)
     object lblClipboard: TLabel
-      Left = 222
+      Left = 151
       Top = 23
-      Width = 264
+      Width = 318
       Height = 13
+      Anchors = [akLeft, akTop, akRight]
+      AutoSize = False
       Caption = '____________________________________________'
+      ExplicitWidth = 370
     end
     object editSearch: TEdit
       Left = 8
       Top = 20
-      Width = 193
+      Width = 137
       Height = 21
       TabOrder = 0
       TextHint = 'Search'
@@ -50,8 +53,8 @@ object MainForm: TMainForm
     object LegVST: TVirtualStringTree
       Left = 0
       Top = 47
-      Width = 465
-      Height = 199
+      Width = 408
+      Height = 212
       Anchors = [akLeft, akTop, akRight, akBottom]
       Header.AutoSizeIndex = 0
       Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
@@ -82,7 +85,7 @@ object MainForm: TMainForm
         end>
     end
     object grpBoxItem: TGroupBox
-      Left = 471
+      Left = 414
       Top = 47
       Width = 214
       Height = 194
@@ -102,32 +105,47 @@ object MainForm: TMainForm
         Height = 146
       end
     end
+    object cbURLSyntax: TComboBox
+      Left = 475
+      Top = 20
+      Width = 145
+      Height = 21
+      Anchors = [akTop, akRight]
+      ItemIndex = 1
+      TabOrder = 3
+      Text = 'Forums (Trust Level 1)'
+      OnChange = cbURLSyntaxChange
+      Items.Strings = (
+        'Pure URL'
+        'Forums (Trust Level 1)'
+        'Forums (Trust Level 3)')
+    end
   end
   object PnlConfig: TPanel
     Left = 0
     Top = 0
-    Width = 688
+    Width = 631
     Height = 95
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
     DesignSize = (
-      688
+      631
       95)
     object grpBoxSettings: TGroupBox
       Left = 0
       Top = 0
-      Width = 653
+      Width = 596
       Height = 95
       Align = alLeft
       Anchors = [akLeft, akTop, akRight, akBottom]
       Caption = 'Configuration'
       TabOrder = 0
       DesignSize = (
-        653
+        596
         95)
       object lblProgress: TLabel
-        Left = 184
+        Left = 16
         Top = 73
         Width = 120
         Height = 13
@@ -199,7 +217,7 @@ object MainForm: TMainForm
         OnClick = cbStayOnTopClick
       end
       object BtnGenerateJS: TButton
-        Left = 549
+        Left = 492
         Top = 22
         Width = 93
         Height = 25
@@ -210,7 +228,7 @@ object MainForm: TMainForm
         OnClick = BtnGenerateJSClick
       end
       object BtnGuides: TButton
-        Left = 549
+        Left = 492
         Top = 50
         Width = 93
         Height = 25
@@ -228,19 +246,9 @@ object MainForm: TMainForm
         Caption = 'Download item graphics'
         TabOrder = 7
       end
-      object cbUseMarkDown: TCheckBox
-        Left = 16
-        Top = 72
-        Width = 137
-        Height = 17
-        Caption = 'Use Markdown syntax'
-        Checked = True
-        State = cbChecked
-        TabOrder = 8
-      end
     end
     object BtnMinimize: TBitBtn
-      Left = 659
+      Left = 602
       Top = 4
       Width = 24
       Height = 15
