@@ -11,18 +11,15 @@ type
   TFGuide = class(TForm)
     GuideMemo: TMemo;
     GroupBox1: TGroupBox;
-    cbExternalHTML: TCheckBox;
     PopupMenu1: TPopupMenu;
     S1: TMenuItem;
     BtnReplaceLinks: TButton;
     cbRegion: TComboBox;
-    lblRegion: TLabel;
-    BtnWhat: TButton;
     //procedure cbExternalHTMLClick(Sender: TObject);
     procedure S1Click(Sender: TObject);
     procedure BtnReplaceLinksClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure BtnTerminatorClick(Sender: TObject);
+    // procedure BtnTerminatorClick(Sender: TObject);
   private
     { Private-Deklarationen }
   public
@@ -135,8 +132,8 @@ begin
         GuideText := StringReplace(GuideText, localOldLink, localNewLink, [rfReplaceAll]);
 
         // replace HREF (for external html guides)
-        if cbExternalHTML.Checked then // and doExternalLinks then
-        begin
+        //if cbExternalHTML.Checked then // and doExternalLinks then
+        //begin
             localNewLink := Copy(TLegItem(LegItems[i]).Link, 7, Length(TLegItem(LegItems[i]).Link)) + '"';
             localOldLink := Copy(TLegItem(LegItems[i]).oldLink, 7, Length(TLegItem(LegItems[i]).oldLink)) + '"';
             GuideText := StringReplace(GuideText, localOldLink, localNewLink, [rfReplaceAll]);
@@ -144,12 +141,13 @@ begin
             localNewLink := Copy(TLegItem(LegItems[i]).Link, 7, Length(TLegItem(LegItems[i]).Link)) + '''';
             localOldLink := Copy(TLegItem(LegItems[i]).oldLink, 7, Length(TLegItem(LegItems[i]).oldLink)) + '''';
             GuideText := StringReplace(GuideText, localOldLink, localNewLink, [rfReplaceAll]);
-        end;
+        //end;
     end;
 
     GuideMemo.Text := GuideText;
 end;
 
+(*
 procedure TFGuide.BtnTerminatorClick(Sender: TObject);
 begin
     MessageDlg(
@@ -166,6 +164,7 @@ begin
      'For guides on other sites, the correction of the html <href> tags is needed, which value is usually terminated with a double or single quote mark ( " or '' ). ' + #13#10
     , mtInformation, [mbOK], 0);
 end;
+*)
 
 (*procedure TFGuide.cbExternalHTMLClick(Sender: TObject);
 begin

@@ -80,7 +80,6 @@ type
     procedure Savelinks1Click(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormShow(Sender: TObject);
-    procedure lblNameClick(Sender: TObject);
     procedure cbURLSyntaxChange(Sender: TObject);
   private
     { Private-Deklarationen }
@@ -504,8 +503,6 @@ begin
 end;
 
 
-
-
 procedure TMainForm.LegVSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
 var Data: PTreeData;
     currentItem: TLegitem;
@@ -531,10 +528,8 @@ begin
 
         try
             newLink := GenerateClipboardLink(currentItem);
-
             ClipBoard.AsText := newLink;
             lblClipboard.Caption := newLink;
-
         except
             //silent
         end;
@@ -885,11 +880,17 @@ begin
         try
             for i := 0 to LegItems.Count - 1 do
             begin
-                localNewLink := Copy(TLegItem(LegItems[i]).Link, 7, Length(TLegItem(LegItems[i]).Link));
-                localOldLink := Copy(TLegItem(LegItems[i]).oldLink, 7, Length(TLegItem(LegItems[i]).oldLink));
-                sl.Add(Format('if (aLinks[i].href.endsWith("%s")) {', [localOldLink]));
-                sl.Add(Format('aLinks[i].href = aLinks[i].href.replace("%s", "%s");', [localOldLink, localNewLink]));
-                sl.Add('} else ')
+                if (Classlist.IndexOf(TLegItem(LegItems[i]).category) = -1)
+                    and
+                    ( TLegItem(LegItems[i]).category  <> '_Emojis')
+                then
+                begin
+                    localNewLink := Copy(TLegItem(LegItems[i]).Link, 4, Length(TLegItem(LegItems[i]).Link));
+                    localOldLink := Copy(TLegItem(LegItems[i]).oldLink, 4, Length(TLegItem(LegItems[i]).oldLink));
+                    sl.Add(Format('if (aLinks[i].href.endsWith("%s")) {', [localOldLink]));
+                    sl.Add(Format('aLinks[i].href = aLinks[i].href.replace("%s", "%s");', [localOldLink, localNewLink]));
+                    sl.Add('} else ')
+                end;
             end;
             Clipboard.AsText := sl.Text;
         finally
@@ -1135,11 +1136,10 @@ begin
             picURLStart := PosEx(SKILL_IMAGE_START, aSourceCode, tmpPos1) + length(SKILL_IMAGE_START);
             picURLEnd := PosEx(SKILL_IMAGE_END, aSourceCode, picURLStart);
             picURL := Copy(aSourceCode, picURLStart, picURLEnd - picURLStart);
-            // to be safe
+            // to be safe  ...
             picURL := StringReplace(picURL, '''', '', [rfReplaceAll]);
 
             // next: named Link, e.g. <a href="/de/class/demon-hunter/active/hungering-arrow" rel="np">Hungriger Pfeil</a>
-
             newURLStart := PosEx(SKILL_URL_BEGIN, aSourceCode, picURLEnd) + length(SKILL_URL_BEGIN);
             newURLend := PosEx(SKILL_URL_END, aSourceCode, newURLStart);
             newURL := Copy(aSourceCode, newURLStart, newURLend - newURLStart);
@@ -1177,7 +1177,7 @@ begin
 
     if aItem.category = '_Emojis' then
     begin
-        // ![valla](http://gamepedia.cursecdn.com/allstars_gamepedia/9/92/Emoji_Valla_Pack_1_Valla_Happy.png)
+        // e.g. ![valla](http://gamepedia.cursecdn.com/allstars_gamepedia/9/92/Emoji_Valla_Pack_1_Valla_Happy.png)
         result := Format('![%s](%s)', [aItem.Name, aItem.Link]);
     end else
     begin
@@ -1236,65 +1236,6 @@ begin
 
 end;
 
-
-procedure TMainForm.lblNameClick(Sender: TObject);
-begin
-
-end;
-
-(*
-procedure TMainForm.parsePageForPictures(aSourceCode: String; destURLs, destNames: TStrings);
-var newURLStart, newURLend, newNameStart, newNameEnd: Integer;
-    tmpPos1: Integer;
-    offset: Integer;
-    tmpName, tmpUrl: String;
-    newFound: Boolean;
-begin
-    offset := 1;
-    newFound := True;
-
-    repeat
-         tmpPos1 := PosEx(LEG_MARKER ,aSourceCode, offset);
-         if tmpPos1 > 1 then
-         begin
-             newURLStart := PosEx(LEG_IMAGE_START, aSourceCode, tmpPos1) + length(LEG_IMAGE_START);
-             newURLend := PosEx(LEG_IMAGE_End, aSourceCode, newURLStart);
-             destURLs.Add(Copy(aSourceCode, newURLStart, newURLend - newURLStart));
-
-             newNameStart := PosEx(LEG_NAME_START, aSourceCode, newURLend) + length(LEG_NAME_START);
-             newNameEnd   := PosEx(LEG_NAME_END, aSourceCode, newNameStart);
-             destNames.Add(Copy(aSourceCode, newNameStart, newNameEnd - newNameStart));
-
-             offset := tmpPos1 + 50;
-         end else
-         begin
-            newFound := False;
-         end;
-    until not newFound;
-
-    // Sets
-    newFound := True;
-    offset := 1;
-    repeat
-        tmpPos1 := PosEx(SET_MARKER ,aSourceCode, offset);
-        if tmpPos1 > 1 then
-        begin
-             newURLStart := PosEx(LEG_IMAGE_START, aSourceCode, tmpPos1) + length(LEG_IMAGE_START);
-             newURLend := PosEx(LEG_IMAGE_End, aSourceCode, newURLStart);
-             destURLs.Add(Copy(aSourceCode, newURLStart, newURLend - newURLStart));
-
-             newNameStart := PosEx(SET_NAME_START, aSourceCode, newURLend) + length(SET_NAME_START);
-             newNameEnd   := PosEx(LEG_NAME_END, aSourceCode, newNameStart);
-             destNames.Add(Copy(aSourceCode, newNameStart, newNameEnd - newNameStart));
-
-             offset := tmpPos1 + 50;
-         end else
-         begin
-            newFound := False;
-         end;
-    until not newFound;
-end;
-*)
 
 procedure TMainForm.Search1Click(Sender: TObject);
 begin

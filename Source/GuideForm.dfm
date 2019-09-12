@@ -3,7 +3,7 @@ object FGuide: TFGuide
   Top = 0
   Caption = 'Rewrite a guide - correct deprecated links permanently'
   ClientHeight = 509
-  ClientWidth = 698
+  ClientWidth = 658
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -13,14 +13,14 @@ object FGuide: TFGuide
   OldCreateOrder = True
   OnShow = FormShow
   DesignSize = (
-    698
+    658
     509)
   PixelsPerInch = 96
   TextHeight = 13
   object GuideMemo: TMemo
     Left = 0
     Top = 0
-    Width = 504
+    Width = 500
     Height = 509
     Align = alLeft
     Anchors = [akLeft, akTop, akRight, akBottom]
@@ -45,39 +45,21 @@ object FGuide: TFGuide
     WordWrap = False
   end
   object GroupBox1: TGroupBox
-    Left = 513
+    Left = 506
     Top = 8
-    Width = 177
-    Height = 113
+    Width = 144
+    Height = 57
     Anchors = [akTop, akRight]
-    Caption = 'Settings'
+    Caption = 'Region (for D3 Forums)'
     TabOrder = 1
-    object lblRegion: TLabel
-      Left = 16
-      Top = 18
-      Width = 112
-      Height = 13
-      Caption = 'Region (for D3 Forums)'
-    end
-    object cbExternalHTML: TCheckBox
-      Left = 16
-      Top = 78
-      Width = 90
-      Height = 17
-      Caption = 'Rewrite HTML'
-      Checked = True
-      State = cbChecked
-      TabOrder = 0
-    end
     object cbRegion: TComboBox
       Left = 16
-      Top = 37
-      Width = 145
+      Top = 21
+      Width = 113
       Height = 21
       Style = csDropDownList
-      ItemHeight = 13
       ItemIndex = 0
-      TabOrder = 1
+      TabOrder = 0
       Text = 'Europe'
       Items.Strings = (
         'Europe'
@@ -85,19 +67,10 @@ object FGuide: TFGuide
         'Korea'
         'Taiwan')
     end
-    object BtnWhat: TButton
-      Left = 112
-      Top = 74
-      Width = 51
-      Height = 25
-      Caption = 'What?'
-      TabOrder = 2
-      OnClick = BtnTerminatorClick
-    end
   end
   object BtnReplaceLinks: TButton
-    Left = 577
-    Top = 135
+    Left = 537
+    Top = 71
     Width = 113
     Height = 25
     Anchors = [akTop, akRight]

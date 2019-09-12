@@ -24,8 +24,6 @@
     The following functions are deactivated in the most current binary 
     (because of the new forums)
 
-    - Replace the "old" item links with the current ones in your guides on the
-      Diablo 3 Forums.
     - Create some part of a JS code needed for a userscript to fix the old links
       in other players guides in your browser. 
       * I used this to create this script:

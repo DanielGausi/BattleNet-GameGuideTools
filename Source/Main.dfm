@@ -2,8 +2,8 @@ object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = 'Diablo 3: Game Guide Tools'
-  ClientHeight = 359
-  ClientWidth = 631
+  ClientHeight = 367
+  ClientWidth = 696
   Color = clBtnFace
   Constraints.MinHeight = 200
   Constraints.MinWidth = 600
@@ -23,18 +23,20 @@ object MainForm: TMainForm
   object grpBox_Main: TGroupBox
     Left = 0
     Top = 95
-    Width = 631
-    Height = 264
+    Width = 696
+    Height = 272
     Align = alClient
     Caption = 'Legendary Items'
     TabOrder = 0
+    ExplicitWidth = 631
+    ExplicitHeight = 264
     DesignSize = (
-      631
-      264)
+      696
+      272)
     object lblClipboard: TLabel
       Left = 151
       Top = 23
-      Width = 318
+      Width = 383
       Height = 13
       Anchors = [akLeft, akTop, akRight]
       AutoSize = False
@@ -53,8 +55,8 @@ object MainForm: TMainForm
     object LegVST: TVirtualStringTree
       Left = 0
       Top = 47
-      Width = 408
-      Height = 212
+      Width = 473
+      Height = 220
       Anchors = [akLeft, akTop, akRight, akBottom]
       Header.AutoSizeIndex = 0
       Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
@@ -67,6 +69,8 @@ object MainForm: TMainForm
       OnFocusChanged = LegVSTFocusChanged
       OnGetText = LegVSTGetText
       OnKeyPress = LegVSTKeyPress
+      ExplicitWidth = 408
+      ExplicitHeight = 212
       Columns = <
         item
           Position = 0
@@ -85,7 +89,7 @@ object MainForm: TMainForm
         end>
     end
     object grpBoxItem: TGroupBox
-      Left = 414
+      Left = 479
       Top = 47
       Width = 214
       Height = 194
@@ -98,6 +102,7 @@ object MainForm: TMainForm
       Font.Style = [fsBold]
       ParentFont = False
       TabOrder = 2
+      ExplicitLeft = 414
       object Image1: TImage
         Left = 13
         Top = 18
@@ -106,7 +111,7 @@ object MainForm: TMainForm
       end
     end
     object cbURLSyntax: TComboBox
-      Left = 475
+      Left = 540
       Top = 20
       Width = 145
       Height = 21
@@ -119,30 +124,33 @@ object MainForm: TMainForm
         'Pure URL'
         'Forums (Trust Level 1)'
         'Forums (Trust Level 3)')
+      ExplicitLeft = 475
     end
   end
   object PnlConfig: TPanel
     Left = 0
     Top = 0
-    Width = 631
+    Width = 696
     Height = 95
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitWidth = 631
     DesignSize = (
-      631
+      696
       95)
     object grpBoxSettings: TGroupBox
       Left = 0
       Top = 0
-      Width = 596
+      Width = 661
       Height = 95
       Align = alLeft
       Anchors = [akLeft, akTop, akRight, akBottom]
       Caption = 'Configuration'
       TabOrder = 0
+      ExplicitWidth = 596
       DesignSize = (
-        596
+        661
         95)
       object lblProgress: TLabel
         Left = 16
@@ -217,8 +225,8 @@ object MainForm: TMainForm
         OnClick = cbStayOnTopClick
       end
       object BtnGenerateJS: TButton
-        Left = 492
-        Top = 22
+        Left = 557
+        Top = 53
         Width = 93
         Height = 25
         Anchors = [akTop, akRight]
@@ -226,17 +234,18 @@ object MainForm: TMainForm
         TabOrder = 5
         Visible = False
         OnClick = BtnGenerateJSClick
+        ExplicitLeft = 492
       end
       object BtnGuides: TButton
-        Left = 492
-        Top = 50
+        Left = 557
+        Top = 22
         Width = 93
         Height = 25
         Anchors = [akTop, akRight]
         Caption = 'Rewrite guide'
         TabOrder = 6
-        Visible = False
         OnClick = BtnGuidesClick
+        ExplicitLeft = 492
       end
       object cbGetPics: TCheckBox
         Left = 303
@@ -248,7 +257,7 @@ object MainForm: TMainForm
       end
     end
     object BtnMinimize: TBitBtn
-      Left = 602
+      Left = 667
       Top = 4
       Width = 24
       Height = 15
@@ -261,6 +270,7 @@ object MainForm: TMainForm
       Spacing = 0
       TabOrder = 1
       OnClick = BtnMinimizeClick
+      ExplicitLeft = 602
     end
   end
   object LegPopup: TPopupMenu
