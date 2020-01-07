@@ -3,7 +3,7 @@
     
 Some tools dealing with the [Diablo 3 Game Guide](https://eu.diablo3.com/de/game/) and links to legendary items like [Buriza-Do Kyanon](https://eu.diablo3.com/de/item/burizado-kyanon-Unique_XBow_011_x1).
 
- ![Screenshot](/screenshot.jpg) 
+ ![Screenshot](/screenshot_new.jpg) 
 
 * Scan the game guide to collect all item links, and search for a specific link by item name
 * Also collect links to all skills (active and passive) of the Diablo 3 hero classes
