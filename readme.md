@@ -23,7 +23,7 @@ The following functions are deactivated in the most current binary, because of t
 I used this to create this [Userscript](http://dh-deluxe.de/files/downloads/D3-Item-Guide-Wizard.user.js). However, this is also outdated ;-). 
 
 ## Copyright note
- Copyright (C) 2017-2019, Daniel Gaussmann   
+ Copyright (C) 2017-2020, Daniel Gaussmann   
  [dh-deluxe.de](http://www.dh-deluxe.de)  
  hebalon@dh-deluxe.de  
  
