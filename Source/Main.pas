@@ -8,7 +8,8 @@ uses
   IdTCPClient, IdHTTP, StrUtils, ComCtrls, IdSSLOpenSSL, shlobj, ActiveX,
   ContNrs, VirtualTrees, Menus, Clipbrd, ShellApi, Buttons, ImgList,
   IniFiles, IdAuthentication, System.ImageList, System.Net.URLClient,
-  System.Net.HttpClient, System.Net.HttpClientComponent, PNGImage ;
+  System.Net.HttpClient, System.Net.HttpClientComponent, PNGImage;
+
 
 type
     TLegItem = class
@@ -43,7 +44,6 @@ type
     cbAutoCopy: TCheckBox;
     cbStayOnTop: TCheckBox;
     BtnGenerateJS: TButton;
-    BtnMinimize: TBitBtn;
     glyphs: TImageList;
     Clersearch1: TMenuItem;
     BtnGuides: TButton;
@@ -54,6 +54,7 @@ type
     grpBoxItem: TGroupBox;
     Image1: TImage;
     cbURLSyntax: TComboBox;
+    BtnMinimize: TSpeedButton;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -332,6 +333,7 @@ begin
     //[sslvSSLv2, sslvSSLv23, sslvTLSv1,sslvTLSv1_1,sslvTLSv1_2];
 
     glyphs.GetBitmap(0, BtnMinimize.Glyph );
+
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
@@ -1320,6 +1322,7 @@ begin
         image1.Picture.Assign(Nil);
     end;
 end;
+
 
 
 
