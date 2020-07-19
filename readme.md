@@ -3,12 +3,13 @@
     
 Some tools dealing with the [Diablo 3 Game Guide](https://eu.diablo3.com/de/game/) and links to legendary items like [Buriza-Do Kyanon](https://eu.diablo3.com/de/item/burizado-kyanon-Unique_XBow_011_x1).
 
- ![Screenshot](/screenshot.jpg) 
+ ![Screenshot](/screenshot_new.jpg) 
 
 * Scan the game guide to collect all item links, and search for a specific link by item name
 * Also collect links to all skills (active and passive) of the Diablo 3 hero classes
 * When searching for an item or skill, a proper URL to that item is copied into the clipboard, to be pasted into the forum editor.
 * URLs can be created as pure URL, within code tags (for users with Trust Level 0-2 in the forums) or with full Markdown syntax (for users with Trust Level 3 in the forums).
+* "Diablo III" look by using VCL Styles
 
  Note: This program will try to create two files in your Diablo III settings directory (usually "my documents\Diablo III") to save settings and the item link information. 
  
@@ -22,7 +23,7 @@ The following functions are deactivated in the most current binary, because of t
 I used this to create this [Userscript](http://dh-deluxe.de/files/downloads/D3-Item-Guide-Wizard.user.js). However, this is also outdated ;-). 
 
 ## Copyright note
- Copyright (C) 2017-2019, Daniel Gaussmann   
+ Copyright (C) 2017-2020, Daniel Gaussmann   
  [dh-deluxe.de](http://www.dh-deluxe.de)  
  hebalon@dh-deluxe.de  
  
