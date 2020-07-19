@@ -70,18 +70,18 @@ object MainForm: TMainForm
       Columns = <
         item
           Position = 0
-          Text = 'Name'
           Width = 183
+          WideText = 'Name'
         end
         item
           Position = 1
-          Text = 'URL'
           Width = 198
+          WideText = 'URL'
         end
         item
           Position = 2
-          Text = 'Old URL (guessed)'
           Width = 188
+          WideText = 'Old URL (guessed)'
         end>
     end
     object grpBoxItem: TGroupBox

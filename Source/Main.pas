@@ -15,7 +15,7 @@ type
     TLegItem = class
         Name: String;
         Link: String;
-        oldLink: String;  // unuesed for skills
+        oldLink: String;  // unused for skills
         category: String; // = Hero class for skills
         constructor create(aName, aLink, aCategory: String);
     end;
@@ -94,11 +94,8 @@ type
 
     lastSelectedItem: TLegItem;
 
-    //procedure parsePageForPictures(aSourceCode: String; destURLs, destNames: TStrings);
     procedure parsePageForItemLinks(aSourceCode: String; categorie: String; doDownloadPics: Boolean);
-
     procedure parsePageForSkillLinks(aSourceCode: String; categorie: String; doDownloadPics: Boolean);
-
     function GuessOldLink(aNewLink: String): String;
 
     function GenerateClipboardLink(aItem: TLegItem): String;
@@ -108,9 +105,7 @@ type
 
     procedure LoadItemsFromFile(aFilename: String);
     procedure SaveItemsToFile(aFilename: String);
-
     procedure LoadSpecialItemsFromFile(aFilename: String);
-
     procedure SavePicToFile(aURL, aFilename: String);
 
   public
@@ -235,18 +230,11 @@ end;
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
     SlotList := TStringList.Create;
-    //subDirs := TStringList.Create;
-
     lblClipboard.Caption := '';
     lblProgress.Caption := '';
 
     LegItems := TObjectList.Create(True);
-
     lastSelectedItem := Nil;
-
-    //BASE_URL_Gems := 'https://eu.diablo3.com/de/item/gem/';
-    //BASE_URL := 'https://eu.battle.net/d3/de/item/';
-    //BASE_URL_Items := 'https://eu.battle.net/';
 
     BASE_URL_BattleNet := 'https://eu.diablo3.com/';
     BASE_URL_Items     := 'https://eu.diablo3.com/de/item/';
@@ -325,15 +313,7 @@ begin
         cbGetPics.Enabled := False;
     end;
 
-    //idhttp1.IOHandler := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
-    //TIdSSLIOHandlerSocketOpenSSL(idhttp1.IoHandler).SSLOptions.SSLVersions :=
-    //    [sslvSSLv2, sslvTLSv1_2];
-
-      //[sslvTLSv1,sslvTLSv1_1,sslvTLSv1_2];
-    //[sslvSSLv2, sslvSSLv23, sslvTLSv1,sslvTLSv1_1,sslvTLSv1_2];
-
     glyphs.GetBitmap(0, BtnMinimize.Glyph );
-
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
@@ -492,7 +472,7 @@ begin
                 sl.Add(tLegitem(LegItems[i]).oldLink);
             end;
         end;
-        sl.SaveToFile(aFileName);
+        sl.SaveToFile(aFileName, TEncoding.UTF8);
     finally
         sl.free;
     end;
@@ -513,14 +493,8 @@ begin
     if cbAutoCopy.Checked and assigned(Node) then
     begin
         Data := Sender.GetNodeData(Node);
-
         currentItem := Data^.fLegItem;
-
         grpBoxItem.Caption  := currentItem.Name;
-
-        //lblName.Caption := currentItem.Name;
-        //lblURL.Caption := currentItem.Link;
-        //lblOldURL.Caption := currentItem.oldLink;
 
         picFilename := DiabloPath + '\' + PICDIR + '\' + currentItem.category + '\' + currentItem.Name + '.png';
         if FileExists(picFilename) then
@@ -578,12 +552,12 @@ procedure TMainForm.LegVSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
   Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
 var Data: PTreeData;
 begin
-        Data:=Sender.GetNodeData(Node);
-        case Column of
-            0: CellText := Data^.fLegItem.Name;
-            1: CellText := Data^.fLegItem.Link;
-            2: CellText := Data^.fLegItem.oldLink;
-        end;
+    Data:=Sender.GetNodeData(Node);
+    case Column of
+        0: CellText := Data^.fLegItem.Name;
+        1: CellText := Data^.fLegItem.Link;
+        2: CellText := Data^.fLegItem.oldLink;
+    end;
 end;
 
 
@@ -656,12 +630,6 @@ begin
         end;
     end;
 
-    //BASE_URL_Gems := 'd3/' + LanguageCode + '/item/';
-    //BASE_URL := 'https://' + regionCode + '.battle.net/d3/' + LanguageCode + '/item/';
-    //BASE_URL_Items := 'https://' + regionCode + '.battle.net/';
-
-    //https://eu.diablo3.com/de/item/gem/
-    //BASE_URL_Gems := 'd3/' + LanguageCode + '/item/';
     BASE_URL_BattleNet := 'https://' + regionCode + '.diablo3.com/';
     BASE_URL_Items     := 'https://' + regionCode + '.diablo3.com/' + LanguageCode + '/item/';
     BASE_URL_Skills    := 'https://' + regionCode + '.diablo3.com/' + LanguageCode + '/class/';
@@ -731,7 +699,6 @@ begin
     begin
         PnlConfig.Height := 19;
         grpBoxSettings.Enabled := False;
-        //Progressbar1.Visible := False;
         BtnMinimize.Tag := 1;
         BtnMinimize.Glyph := Nil;
         glyphs.GetBitmap(1, BtnMinimize.Glyph );
@@ -739,7 +706,6 @@ begin
     begin
         PnlConfig.Height := 95;
         grpBoxSettings.Enabled := True;
-        //Progressbar1.Visible := True;
         BtnMinimize.Tag := 0;
         BtnMinimize.Glyph := Nil;
         glyphs.GetBitmap(0, BtnMinimize.Glyph );
@@ -753,7 +719,7 @@ var s: String;
   ms: TMemoryStream;
   mostRecentScan: String;
   newTitleStart, newTitleEnd : Integer;
-
+  FirstNode: PVirtualNode;
   HttpClient: THttpClient;
 begin
     if LegItems.Count > 0 then
@@ -768,11 +734,8 @@ begin
 
     LegVST.Clear;
     LegItems.Clear;
-
     lastSelectedItem := Nil;
-
     mostRecentScan := '';
-    //IdHTTP1.Request.ContentType := 'charset=utf-8';
 
     HttpClient := THttpClient.Create;
     try
@@ -832,16 +795,6 @@ begin
                 ms.ReadBuffer(PAnsiChar(utf8)^, ms.Size);
                 s := UTF8ToString(utf8);
                 parsePageForSkillLinks(s, ClassList[i], cbGetPics.Checked);
-
-                //Application.ProcessMessages;
-
-                // get the current title of the Page
-                // doesnt make sense for skill, as it doesnt include the class name
-                //newTitleStart := PosEx(TITLE_BEGIN, s, 1) + length(TITLE_BEGIN);
-                //newTitleEnd := PosEx(TITLE_END, s, newTitleStart); // + length(TITLE_END);
-                //mostRecentScan := Copy(s, newTitleStart, newTitleEnd - newTitleStart);
-
-
             end;
 
 
@@ -856,10 +809,13 @@ begin
     if FileExists(DiabloPath + '\GameGuideToolEmojis.items') then
         LoadSpecialItemsFromFile(DiabloPath + '\GameGuideToolEmojis.items');
 
-
-    if assigned(LegVST.GetFirst(False)) then
-        LegVST.Selected[0] := True;
-    LegVST.FocusedNode := LegVST.GetFirst;
+    FirstNode := LegVST.GetFirst;
+    if assigned(FirstNode) then
+    begin
+        //LegVST.Selected[0] := True;
+        LegVST.Selected[FirstNode] := True;
+        LegVST.FocusedNode := FirstNode;
+    end;
 
     lblProgress.Caption := 'Scanning complete, ' + IntToStr(Legitems.Count) + ' items found.';
 end;
@@ -920,8 +876,6 @@ begin
     offset := 1;
     newFound := True;
 
-    //ShowMessage(aSourceCode);
-
     if doDownloadPics and DirectoryExists(DiabloPath) then
     begin
         currentDir := DiabloPath + '\' + PICDIR + '\' + categorie;
@@ -938,11 +892,6 @@ begin
         // Gems are special
         repeat
             tmpPos1 := PosEx(GEM_MARKER ,aSourceCode, offset);
-
-            {
-          GEM_NAME_START = 'data-raw="';
-          GEM_NAME_END = '">';
-            }
             if tmpPos1 > 1 then
             begin
 
@@ -995,28 +944,6 @@ begin
     begin
         repeat
             tmpPos1 := PosEx(LEG_MARKER ,aSourceCode, offset);
-            {
-             LEG_MARKER = ' legendary"';
-
-              LEG_IMAGE_START = 'background-image: url(';
-              LEG_IMAGE_END = ');';
-
-              LEG_ITEM_LINK_BEGIN = '<a href="/';  // base-URL ends with "/", so we dont need the first "/" here
-              LEG_ITEM_LINK_END = '"';
-
-              TITLE_BEGIN = '<title>';
-              TITLE_END = '</title>';
-
-              GEM_NAME_START = 'data-raw="';
-              GEM_NAME_END = '">';
-
-              LEG_NAME_START = 'class="d3-color-orange">';
-              LEG_NAME_END = '</a>';
-
-              SET_MARKER = 'd3-icon-item-green';
-              SET_NAME_START = 'class="d3-color-green">';
-
-            }
             if tmpPos1 > 1 then
             begin
                newURLStart := PosEx(LEG_ITEM_LINK_BEGIN, aSourceCode, tmpPos1) + length(LEG_ITEM_LINK_BEGIN);
@@ -1103,8 +1030,6 @@ begin
     offset := 1;
     newFound := True;
 
-    //ShowMessage(aSourceCode);
-
     if doDownloadPics and DirectoryExists(DiabloPath) then
     begin
         currentDir := DiabloPath + '\' + PICDIR + '\' + categorie;
@@ -1119,19 +1044,6 @@ begin
 
     repeat
         tmpPos1 := PosEx(SKILL_MARKER ,aSourceCode, offset);
-        {
-          // skills
-          SKILL_MARKER = '<div class="skill-details">';
-          SKILL_IMAGE_START = 'background-image: url(';
-          SKILL_IMAGE_END = ');';
-
-          SKILL_URL_BEGIN = '<a href="';
-          SKILL_URL_END   = '"';
-
-          SKILL_NAME_BEGIN = '>'; // end of the opening <a ...>
-          SKILL_NAME_END   = '<'; // start of the closing </a>
-
-        }
         if tmpPos1 > 1 then
         begin
             // first in the code is the image-URL here
@@ -1183,7 +1095,6 @@ begin
         result := Format('![%s](%s)', [aItem.Name, aItem.Link]);
     end else
     begin
-
         case cbURLSyntax.ItemIndex of
             1: result := Format('`%s`', [BASE_URL_BattleNet + aItem.Link]);
             2: result := Format('[%s](%s)', [aItem.Name, BASE_URL_BattleNet + aItem.Link]);
@@ -1294,11 +1205,13 @@ begin
     sl := Explode(' ', editSearch.Text);
     LegVST.Clear;
 
+    LegVST.BeginUpdate;
     for i := 0 to LegItems.Count - 1 do
     begin
         if ItemMatch(TLegItem(LegItems[i]), sl) then
             AddVSTLegItem(LegVST, Nil, TLegItem(LegItems[i]));
     end;
+    LegVST.EndUpdate;
     sl.Free;
 end;
 
@@ -1309,22 +1222,15 @@ begin
         DoSearch(editSearch.Text)
     else
     begin
+        LegVST.BeginUpdate;
         LegVST.Clear;
         for i := 0 to LegItems.Count-1 do
             AddVSTLegItem(LegVST, Nil, TLegItem(LegItems[i]));
+        LegVST.EndUpdate;
     end;
 
     LegVST.FocusedNode := LegVST.GetFirst;
-
-    if not assigned(LegVST.FocusedNode) then
-    begin
-        grpBoxItem.Caption := 'Item information';
-        image1.Picture.Assign(Nil);
-    end;
 end;
-
-
-
 
 
 end.
